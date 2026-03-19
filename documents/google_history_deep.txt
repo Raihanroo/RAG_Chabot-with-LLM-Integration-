@@ -1,0 +1,5 @@
+Google's journey began in January 1996 as a research project by Larry Page and Sergey Brin, who were both PhD students at Stanford University. Their search engine was originally nicknamed "BackRub" because it checked backlinks to estimate the importance of a site. They eventually changed the name to Google, a play on the word "googol"—the mathematical term for a 1 followed by 100 zeros.
+
+The company was formally incorporated on September 4, 1998, in a friend's garage in Menlo Park, California. In August 2004, Google went public via an initial public offering (IPO), making Page, Brin, and CEO Eric Schmidt billionaires. Between 2001 and 2010, Google acquired many companies, most notably YouTube in 2006 for $1.65 billion and DoubleClick in 2007.
+
+One of the biggest shifts occurred in 2015 when Google reorganized as a subsidiary of Alphabet Inc. This allowed the company to separate its core internet business from "Other Bets" like Waymo (self-driving cars) and Verily (life sciences). As of 2026, Google remains a leader in AI, specifically with its "Gemini" family of models, which are integrated across Search, Workspace, and Android.

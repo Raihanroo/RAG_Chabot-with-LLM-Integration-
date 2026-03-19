@@ -1,0 +1,1 @@
+My name is Raihan Islam. I am learning RAG chatbot development with Python and LangChain. I live in Bangladesh.

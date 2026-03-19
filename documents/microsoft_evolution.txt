@@ -1,0 +1,5 @@
+Microsoft's rise to dominance started with MS-DOS in the early 1980s, followed by the massive success of Microsoft Windows. The launch of Windows 95 was a pivotal moment in computing history, introducing the Start menu and taskbar that remain central to the UI today. 
+
+Under the leadership of Satya Nadella, who became CEO in 2014, Microsoft shifted its focus from "Windows-first" to "Cloud-first, Mobile-first." This led to the rapid growth of Azure, which now competes directly with Amazon Web Services (AWS). Microsoft's acquisition strategy has been aggressive, buying LinkedIn for $26 billion in 2016, GitHub in 2018, and Activision Blizzard in 2023 for $68.7 billion. 
+
+Currently, Microsoft is deeply integrated with OpenAI, using GPT technology to power "Copilot" across its software suite. This integration has turned Microsoft into an AI powerhouse, providing enterprise-grade AI solutions to millions of businesses worldwide.
