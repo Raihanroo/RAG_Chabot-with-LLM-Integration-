@@ -13,46 +13,8 @@ This project is a Retrieval-Augmented Generation (RAG) Chatbot that allows users
 
 System Architecture:
 
-┌─────────────────────────────────────────────────────────────┐
-│                    USER INTERFACE                           │
-│                  (Streamlit Web App)                        │
-│  • Chat interface with conversation history                 │
-│  • Sidebar for API configuration                            │
-│  • Source display with expandable sections                  │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   CHATBOT ENGINE                            │
-│              (LangChain + Gemini LLM)                       │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │  1. Question Processing                              │   │
-│  │  2. Document Retrieval (ChromaDB)                    │   │
-│  │  3. Context Building with History                    │   │
-│  │  4. Response Generation via Gemini 1.5 Flash         │   │
-│  └─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  VECTOR DATABASE                            │
-│                    (ChromaDB)                               │
-│  • Stores document embeddings (1024 dimensions)             │
-│  • Enables semantic similarity search                       │
-│  • Persistent storage for reusability                       │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                 DATA INGESTION                              │
-│              (Ingestion Pipeline)                           │
-│  • PDF files (page-level processing)                        │
-│  • Text files (.txt, .md)                                   │
-│  • CSV files (tabular data)                                 │
-│  • Web pages (URL ingestion)                                │
-│  • Chunking: 500 chars with 50 overlap                      │
+<img width="1600" height="1040" alt="RAG_System_Architecture" src="https://github.com/user-attachments/assets/6c05d33a-fdf3-43a7-94e7-fb35910725a0" />
 
-└─────────────────────────────────────────────────────────────┘
 
 Technology Stack:
 
