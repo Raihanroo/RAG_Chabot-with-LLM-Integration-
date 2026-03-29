@@ -6,7 +6,9 @@ Project Overview
 This project is a Retrieval-Augmented Generation (RAG) Chatbot that allows users to ask questions about their documents and receive intelligent, context-aware answers. The system combines document retrieval with Google's Gemini AI model to provide accurate responses based on the content of uploaded documents. The application features a user-friendly web interface built with Streamlit and supports multiple document formats including PDF, text files, CSV, and web pages.
 
 
-<img width="1800" height="2160" alt="RAG_Chatbot_Project_Schema" src="https://github.com/user-attachments/assets/dde9038a-5c09-44b6-b3f0-f371657223f2" />
+
+<img width="1400" height="960" alt="RAG_Chatbot_Schema_Pro" src="https://github.com/user-attachments/assets/765abc7b-ce9c-4246-ad64-e909c8e04e9b" />
+
 
 
 System Architecture:
