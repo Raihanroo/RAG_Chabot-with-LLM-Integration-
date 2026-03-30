@@ -8,7 +8,7 @@ load_dotenv()
 
 CHROMA_DB_PATH = "./chroma_db"
 TOP_K_CHUNKS = 4
-GEMINI_MODEL = "gemini-2.0-flash-lite"
+GEMINI_MODEL = "models/gemini-2.0-flash"
 
 
 def load_vector_store():
@@ -18,20 +18,16 @@ def load_vector_store():
     return Chroma(persist_directory=CHROMA_DB_PATH, embedding_function=embeddings)
 
 
-# chatbot.py এর build_rag_chain ফাংশনে LLM এর সাথে max_retries যোগ করুন
 def build_rag_chain():
     vector_store = load_vector_store()
     retriever = vector_store.as_retriever(search_kwargs={"k": TOP_K_CHUNKS})
 
-    # এই অংশটি ফাংশনের ভেতরে থাকবে
     llm = ChatGoogleGenerativeAI(
         model=GEMINI_MODEL,
         temperature=0,
         max_retries=6,
-        version="v1",  # এরর এড়াতে এটি যোগ করা হয়েছে
     )
 
-    # সবশেষে ডিকশনারিটি রিটার্ন করতে হবে
     return {"retriever": retriever, "llm": llm, "history": []}
 
 
@@ -88,12 +84,16 @@ if __name__ == "__main__":
     print("  RAG Chatbot - Terminal Mode")
     print("=" * 50)
     chain = build_rag_chain()
-    print("প্রশ্ন করো। বের হতে 'quit' লেখো.\n")
+    print("Ask a question. Type 'quit' to exit.\n")
     while True:
-        question = input("\nতুমি: ").strip()
+        question = input("\nYou: ").strip()
         if question.lower() in ("quit", "exit", "q"):
             break
         if not question:
             continue
         response = ask_question(chain, question)
         print(f"\nBot: {response['answer']}")
+        if response["sources"]:
+            print("\nSources:")
+            for src in response["sources"]:
+                print(f"  - {src['file']}")

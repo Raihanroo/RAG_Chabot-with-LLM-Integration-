@@ -9,25 +9,7 @@ from langchain_community.document_loaders import (
     CSVLoader,
     WebBaseLoader,
 )
-
-# একদম উপরে import পরিবর্তন করুন
-from langchain_text_splitters import RecursiveCharacterTextSplitter  # এটি ব্যবহার করুন
-
-
-# split_documents ফাংশনটি এভাবে আপডেট করুন:
-def split_documents(documents):
-    print(f"\n  Splitting {len(documents)} documents into chunks...")
-    # Recursive splitter ব্যবহার করলে টোকেন ওভারফ্লো হওয়ার সম্ভাবনা কমে
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=CHUNK_SIZE,
-        chunk_overlap=CHUNK_OVERLAP,
-        separators=["\n\n", "\n", " ", ""],  # ক্রমান্বয়ে ভাগ করার চেষ্টা করবে
-    )
-    chunks = splitter.split_documents(documents)
-    print(f"  Created {len(chunks)} chunks")
-    return chunks
-
-
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 
@@ -37,6 +19,18 @@ DOCUMENTS_FOLDER = "./documents"
 CHROMA_DB_PATH = "./chroma_db"
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 50
+
+
+def split_documents(documents):
+    print(f"\n  Splitting {len(documents)} documents into chunks...")
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=CHUNK_OVERLAP,
+        separators=["\n\n", "\n", " ", ""],
+    )
+    chunks = splitter.split_documents(documents)
+    print(f"  Created {len(chunks)} chunks")
+    return chunks
 
 
 def load_pdfs():
@@ -106,12 +100,12 @@ def load_web_pages(urls: list):
 
 
 def create_vector_store(chunks):
-    embeddings_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+    embeddings_model = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+
 
     if os.path.exists(CHROMA_DB_PATH):
         shutil.rmtree(CHROMA_DB_PATH)
 
-    # একবারে সব না পাঠিয়ে ১০০টি করে চাঙ্ক পাঠানো (Batch processing)
     vector_store = Chroma(
         persist_directory=CHROMA_DB_PATH, embedding_function=embeddings_model
     )
@@ -121,10 +115,9 @@ def create_vector_store(chunks):
         batch = chunks[i : i + batch_size]
         vector_store.add_documents(batch)
         print(f"  Saved {i + len(batch)} chunks...")
-        time.sleep(2)  # প্রতি ব্যাচের মাঝে ২ সেকেন্ড বিরতি যাতে API ব্লক না করে
+        time.sleep(2)
 
     return vector_store
-
 
 def main():
     print("=" * 50)
