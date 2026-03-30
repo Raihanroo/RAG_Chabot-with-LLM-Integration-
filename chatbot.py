@@ -14,7 +14,7 @@ GEMINI_MODEL = "models/gemini-2.0-flash"
 def load_vector_store():
     if not os.path.exists(CHROMA_DB_PATH):
         raise FileNotFoundError("Run python ingestion_pipeline.py first!")
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     return Chroma(persist_directory=CHROMA_DB_PATH, embedding_function=embeddings)
 
 

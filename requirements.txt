@@ -1,0 +1,11 @@
+streamlit
+python-dotenv
+langchain
+langchain-google-genai
+langchain-chroma
+langchain-core
+langchain-community
+langchain-text-splitters
+chromadb
+google-generativeai
+pypdf
