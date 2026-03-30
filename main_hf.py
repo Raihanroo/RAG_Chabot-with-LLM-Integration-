@@ -2,14 +2,16 @@ import os
 import chromadb
 import time
 from dotenv import load_dotenv
-from google import genai
+from openai import OpenAI
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
 
 load_dotenv()
-client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1", api_key=os.getenv("OPENAI_API_KEY")
+)
 
-# HuggingFace embedding (to avoid Google embedding quota)
+# HuggingFace embedding (to avoid OpenRouter embedding quota)
 print("📥 Loading embedding model...")
 embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 print("✅ Embedding model ready")
@@ -24,8 +26,8 @@ except:
 
 collection = chroma_client.create_collection(name="my_knowledge_base")
 
-# Use a model with better free tier quota
-LLM_MODEL = "models/gemini-2.0-flash-lite"  # More quota available
+# OpenRouter model
+LLM_MODEL = "openai/gpt-4o-mini"
 
 
 def get_embedding(text):
@@ -37,8 +39,10 @@ def generate_with_retry(prompt, max_retries=5):
     """Generate content with automatic retry on quota error"""
     for attempt in range(max_retries):
         try:
-            response = client.models.generate_content(model=LLM_MODEL, contents=prompt)
-            return response.text
+            response = client.chat.completions.create(
+                model=LLM_MODEL, messages=[{"role": "user", "content": prompt}]
+            )
+            return response.choices[0].message.content
         except Exception as e:
             if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
                 wait_time = 20  # Wait 20 seconds

@@ -1,11 +1,13 @@
 import os
 import chromadb
 from dotenv import load_dotenv
-from google import genai
+from openai import OpenAI
 from pathlib import Path
 
 load_dotenv()
-client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1", api_key=os.getenv("OPENAI_API_KEY")
+)
 
 CHROMA_DB_PATH = "./chroma_db"
 chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
@@ -18,9 +20,9 @@ except:
 
 collection = chroma_client.create_collection(name="my_knowledge_base")
 
-# ✅ WORKING MODELS (from your API):
-EMBEDDING_MODEL = "models/gemini-embedding-001"
-LLM_MODEL = "models/gemini-2.0-flash"  # This works!
+# OpenRouter models
+EMBEDDING_MODEL = "text-embedding-3-small"
+LLM_MODEL = "openai/gpt-4o-mini"
 
 
 def load_text_files(documents_folder="./documents"):
@@ -64,8 +66,8 @@ def split_text_into_chunks(text, chunk_size=500, overlap=50):
 def add_to_knowledge_base(text, text_id, metadata=None):
     try:
         print(f"📝 Adding: {text[:50]}...")
-        result = client.models.embed_content(model=EMBEDDING_MODEL, contents=text)
-        vector = result.embeddings[0].values
+        result = client.embeddings.create(model=EMBEDDING_MODEL, input=text)
+        vector = result.data[0].embedding
         collection.add(
             ids=[text_id],
             embeddings=[vector],
@@ -123,10 +125,8 @@ def main():
     print("\n[Step 4] Testing...")
     test_query = "What is Python?"
     try:
-        query_result = client.models.embed_content(
-            model=EMBEDDING_MODEL, contents=test_query
-        )
-        query_vector = query_result.embeddings[0].values
+        query_result = client.embeddings.create(model=EMBEDDING_MODEL, input=test_query)
+        query_vector = query_result.data[0].embedding
         results = collection.query(query_embeddings=[query_vector], n_results=2)
 
         if results["documents"][0]:
@@ -137,9 +137,11 @@ Context: {context}
 
 Answer briefly:"""
 
-            response = client.models.generate_content(model=LLM_MODEL, contents=prompt)
+            response = client.chat.completions.create(
+                model=LLM_MODEL, messages=[{"role": "user", "content": prompt}]
+            )
             print(f"\nQuestion: {test_query}")
-            print(f"Answer: {response.text}")
+            print(f"Answer: {response.choices[0].message.content}")
         else:
             print("No results found")
     except Exception as e:

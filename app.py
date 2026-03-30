@@ -25,19 +25,19 @@ st.markdown(
 
 with st.sidebar:
     st.title("🧠 RAG Chatbot")
-    st.caption("Gemini দিয়ে তৈরি — বিনামূল্যে!")
+    st.caption("OpenRouter দিয়ে তৈরি!")
     st.divider()
 
-    st.subheader("🔑 Gemini API Key")
-    existing_key = os.getenv("GOOGLE_API_KEY", "")
+    st.subheader("🔑 OpenRouter API Key")
+    existing_key = os.getenv("OPENAI_API_KEY", "")
     if existing_key:
-        st.success("Gemini API key লোড হয়েছে ✅")
+        st.success("OpenRouter API key লোড হয়েছে ✅")
     else:
         typed_key = st.text_input(
-            "API key দাও:", type="password", placeholder="AIza..."
+            "API key দাও:", type="password", placeholder="sk-or-v1-..."
         )
         if typed_key:
-            os.environ["GOOGLE_API_KEY"] = typed_key
+            os.environ["OPENAI_API_KEY"] = typed_key
             st.success("Key set! ✅")
 
     st.divider()
@@ -60,13 +60,13 @@ with st.sidebar:
         st.rerun()
 
 st.title("💬 তোমার Documents এর সাথে কথা বলো")
-st.caption("Powered by Google Gemini + ChromaDB — সম্পূর্ণ বিনামূল্যে!")
+st.caption("Powered by OpenRouter + ChromaDB")
 
-api_key = os.getenv("GOOGLE_API_KEY", "")
+api_key = os.getenv("OPENAI_API_KEY", "")
 db_ready = os.path.exists("./chroma_db")
 
 if not api_key:
-    st.warning("👈 Sidebar এ Gemini API key দাও।")
+    st.warning("👈 Sidebar এ OpenRouter API key দাও।")
     st.stop()
 
 if not db_ready:

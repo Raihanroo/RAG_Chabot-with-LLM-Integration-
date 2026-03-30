@@ -10,7 +10,7 @@ from langchain_community.document_loaders import (
     WebBaseLoader,
 )
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 
 load_dotenv()
@@ -100,8 +100,11 @@ def load_web_pages(urls: list):
 
 
 def create_vector_store(chunks):
-    embeddings_model = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-
+    embeddings_model = OpenAIEmbeddings(
+        model="text-embedding-3-small",
+        openai_api_base="https://openrouter.ai/api/v1",
+        openai_api_key=os.getenv("OPENAI_API_KEY"),
+    )
 
     if os.path.exists(CHROMA_DB_PATH):
         shutil.rmtree(CHROMA_DB_PATH)
@@ -119,9 +122,10 @@ def create_vector_store(chunks):
 
     return vector_store
 
+
 def main():
     print("=" * 50)
-    print("  RAG Chatbot - Ingestion Pipeline (Gemini)")
+    print("  RAG Chatbot - Ingestion Pipeline (OpenRouter)")
     print("=" * 50)
 
     urls = []

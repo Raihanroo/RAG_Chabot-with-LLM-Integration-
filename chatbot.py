@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.messages import HumanMessage, AIMessage
 
@@ -8,13 +8,17 @@ load_dotenv()
 
 CHROMA_DB_PATH = "./chroma_db"
 TOP_K_CHUNKS = 4
-GEMINI_MODEL = "models/gemini-2.0-flash"
+OPENROUTER_MODEL = "openai/gpt-4o-mini"
 
 
 def load_vector_store():
     if not os.path.exists(CHROMA_DB_PATH):
         raise FileNotFoundError("Run python ingestion_pipeline.py first!")
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    embeddings = OpenAIEmbeddings(
+        model="text-embedding-3-small",
+        openai_api_base="https://openrouter.ai/api/v1",
+        openai_api_key=os.getenv("OPENAI_API_KEY"),
+    )
     return Chroma(persist_directory=CHROMA_DB_PATH, embedding_function=embeddings)
 
 
@@ -22,10 +26,12 @@ def build_rag_chain():
     vector_store = load_vector_store()
     retriever = vector_store.as_retriever(search_kwargs={"k": TOP_K_CHUNKS})
 
-    llm = ChatGoogleGenerativeAI(
-        model=GEMINI_MODEL,
+    llm = ChatOpenAI(
+        model=OPENROUTER_MODEL,
         temperature=0,
         max_retries=6,
+        openai_api_base="https://openrouter.ai/api/v1",
+        openai_api_key=os.getenv("OPENAI_API_KEY"),
     )
 
     return {"retriever": retriever, "llm": llm, "history": []}
