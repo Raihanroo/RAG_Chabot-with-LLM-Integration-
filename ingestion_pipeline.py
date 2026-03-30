@@ -100,27 +100,48 @@ def load_web_pages(urls: list):
 
 
 def create_vector_store(chunks):
-    embeddings_model = OpenAIEmbeddings(
-        model="text-embedding-3-small",
-        openai_api_base="https://openrouter.ai/api/v1",
-        openai_api_key=os.getenv("OPENAI_API_KEY"),
-    )
+    api_key = os.getenv("OPENAI_API_KEY", "")
+    if not api_key:
+        print("\n❌ ERROR: OPENAI_API_KEY not set!")
+        print("Please set your OpenRouter API key in Streamlit Cloud Secrets:")
+        print("OPENAI_API_KEY=sk-or-v1-xxxxxxxxxxxxxxxx")
+        return None
 
-    if os.path.exists(CHROMA_DB_PATH):
-        shutil.rmtree(CHROMA_DB_PATH)
+    if not api_key.startswith("sk-or-v1-"):
+        print("\n❌ ERROR: Invalid API key format!")
+        print("OpenRouter API key should start with 'sk-or-v1-'")
+        print(f"Your key starts with: {api_key[:10]}...")
+        return None
 
-    vector_store = Chroma(
-        persist_directory=CHROMA_DB_PATH, embedding_function=embeddings_model
-    )
+    try:
+        embeddings_model = OpenAIEmbeddings(
+            model="text-embedding-3-small",
+            openai_api_base="https://openrouter.ai/api/v1",
+            openai_api_key=api_key,
+        )
 
-    batch_size = 100
-    for i in range(0, len(chunks), batch_size):
-        batch = chunks[i : i + batch_size]
-        vector_store.add_documents(batch)
-        print(f"  Saved {i + len(batch)} chunks...")
-        time.sleep(2)
+        if os.path.exists(CHROMA_DB_PATH):
+            shutil.rmtree(CHROMA_DB_PATH)
 
-    return vector_store
+        vector_store = Chroma(
+            persist_directory=CHROMA_DB_PATH, embedding_function=embeddings_model
+        )
+
+        batch_size = 100
+        for i in range(0, len(chunks), batch_size):
+            batch = chunks[i : i + batch_size]
+            vector_store.add_documents(batch)
+            print(f"  Saved {i + len(batch)} chunks...")
+            time.sleep(2)
+
+        return vector_store
+    except Exception as e:
+        print(f"\n❌ ERROR creating vector store: {e}")
+        print("\nPossible issues:")
+        print("1. Invalid API key")
+        print("2. OpenRouter doesn't support embeddings endpoint")
+        print("3. Network connection issue")
+        return None
 
 
 def main():
@@ -156,7 +177,11 @@ def main():
     chunks = split_documents(all_documents)
 
     print("\n[Step 3] Creating vector store...")
-    create_vector_store(chunks)
+    vector_store = create_vector_store(chunks)
+
+    if vector_store is None:
+        print("\n❌ Failed to create vector store!")
+        return
 
     print("\n" + "=" * 50)
     print("  Ingestion complete!")

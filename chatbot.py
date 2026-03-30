@@ -14,10 +14,15 @@ OPENROUTER_MODEL = "openai/gpt-4o-mini"
 def load_vector_store():
     if not os.path.exists(CHROMA_DB_PATH):
         raise FileNotFoundError("Run python ingestion_pipeline.py first!")
+
+    api_key = os.getenv("OPENAI_API_KEY", "")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY not set!")
+
     embeddings = OpenAIEmbeddings(
         model="text-embedding-3-small",
         openai_api_base="https://openrouter.ai/api/v1",
-        openai_api_key=os.getenv("OPENAI_API_KEY"),
+        openai_api_key=api_key,
     )
     return Chroma(persist_directory=CHROMA_DB_PATH, embedding_function=embeddings)
 
@@ -26,12 +31,16 @@ def build_rag_chain():
     vector_store = load_vector_store()
     retriever = vector_store.as_retriever(search_kwargs={"k": TOP_K_CHUNKS})
 
+    api_key = os.getenv("OPENAI_API_KEY", "")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY not set!")
+
     llm = ChatOpenAI(
         model=OPENROUTER_MODEL,
         temperature=0,
         max_retries=6,
         openai_api_base="https://openrouter.ai/api/v1",
-        openai_api_key=os.getenv("OPENAI_API_KEY"),
+        openai_api_key=api_key,
     )
 
     return {"retriever": retriever, "llm": llm, "history": []}
