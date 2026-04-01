@@ -50,7 +50,7 @@ with st.sidebar:
     st.divider()
 
     st.subheader("📦 Document Status")
-    if os.path.exists("./chroma_db"):
+    if os.path.exists("./faiss_db"):
         st.success("Documents indexed ✅")
     elif os.getenv("OPENAI_API_KEY", ""):
         with st.spinner("Documents index হচ্ছে..."):
@@ -76,7 +76,7 @@ st.title("💬 তোমার Documents এর সাথে কথা বলো
 st.caption("Powered by OpenRouter + ChromaDB")
 
 api_key = os.getenv("OPENAI_API_KEY", "")
-db_ready = os.path.exists("./chroma_db")
+db_ready = os.path.exists("./faiss_db")
 
 if not api_key:
     st.warning("👈 Sidebar এ OpenRouter API key দাও।")
