@@ -1,473 +1,185 @@
-RAG Chatbot Project Summary
-AI-Powered Document Q&A System Using Google Gemini
-==================
-Project Overview
-==================
-This project is a Retrieval-Augmented Generation (RAG) Chatbot that allows users to ask questions about their documents and receive intelligent, context-aware answers. The system combines document retrieval with Google's Gemini AI model to provide accurate responses based on the content of uploaded documents. The application features a user-friendly web interface built with Streamlit and supports multiple document formats including PDF, text files, CSV, and web pages.
+# RAG Chatbot — Beginner's Guide
 
+A Retrieval-Augmented Generation (RAG) chatbot that lets you chat with your own documents using OpenRouter AI and ChromaDB.
 
+---
 
-<img width="1400" height="960" alt="RAG_Chatbot_Schema_Pro" src="https://github.com/user-attachments/assets/765abc7b-ce9c-4246-ad64-e909c8e04e9b" />
+## What is RAG?
 
+RAG (Retrieval-Augmented Generation) is a technique where the AI first **retrieves** relevant chunks from your documents, then **generates** an answer based only on that context — so it doesn't hallucinate or make things up.
 
+```
+Your Question
+     ↓
+ChromaDB (Vector Search) → Finds relevant document chunks
+     ↓
+LLM (GPT-4o-mini via OpenRouter) → Generates answer from those chunks
+     ↓
+Answer + Sources
+```
 
-System Architecture:
+---
 
-<img width="1600" height="1040" alt="RAG_System_Architecture" src="https://github.com/user-attachments/assets/6c05d33a-fdf3-43a7-94e7-fb35910725a0" />
+## Project Structure
 
-
-Technology Stack:
-
-Component	Technology	Version/Purpose
-LLM Model	Google Gemini 1.5 Flash	Fast, efficient responses
-Embeddings	Google Generative AI Embeddings	model: embedding-001
-Vector Database	ChromaDB	Persistent vector storage
-Framework	LangChain	Orchestration & chains
-Frontend	Streamlit	Web interface
-Document Loaders	PyPDF2, TextLoader, CSVLoader, WebBaseLoader	Multi-format support
-Programming Language	Python	3.8+
-
-📁 Project Structure
-
-rag-chatbot-project/
+```
+Rag_for_beginner/
 │
-├── app.py                      # Streamlit web application (main UI)
-├── chatbot.py                  # Core RAG logic and conversation handling
-├── ingestion_pipeline.py       # Document loading and vector indexing
-├── .env                        # Environment variables (API keys)
-├── requirements.txt            # Python dependencies
+├── app.py                  # Streamlit web UI (main entry point)
+├── chatbot.py              # RAG chain logic (retriever + LLM)
+├── ingestion_pipeline.py   # Loads & indexes documents into ChromaDB
+├── main.py                 # Alternate ingestion script (raw OpenAI client)
 │
-├── documents/                  # Source documents folder
-│   ├── *.pdf                   # PDF documents
-│   ├── *.txt                   # Text files
-│   ├── *.csv                   # CSV data files
-│   └── *.url                   # Web page URLs (optional)
+├── documents/              # Put your PDF, TXT, CSV files here
+│   ├── google_history_deep.txt
+│   ├── microsoft_evolution.txt
+│   └── tesla_gigafactories.txt
 │
-├── chroma_db/                  # Vector database storage
-│   ├── chroma.sqlite3          # SQLite database
-│   └── *.parquet               # Embedding storage
-│
-└── README.md                   # Project documentation
+├── chroma_db/              # Auto-generated vector database (don't edit)
+├── .env                    # Your API key goes here
+├── requirements.txt        # Python dependencies
+└── .streamlit/
+    └── secrets.toml.example
+```
 
-Core Features:
+---
 
-1. Multi-format Document Support
-✅ PDF files: With page-level metadata tracking
+## Setup
 
-✅ Text files: Plain text documents (.txt, .md)
+### 1. Install dependencies
 
-✅ CSV files: Tabular data with row-by-row processing
+```bash
+pip install -r requirements.txt
+```
 
-✅ Web pages: URL-based content extraction
+Or if using a virtual environment:
 
-2. Intelligent Document Processing:
+```bash
+python -m venv venv
+.\venv\Scripts\Activate.ps1   # Windows
+source venv/bin/activate       # Mac/Linux
 
-Smart Chunking: Documents split into 500-character chunks with 50-character overlap for context preservation
+pip install -r requirements.txt
+```
 
-Semantic Retrieval: Returns top 4 most relevant chunks per query using cosine similarity
+### 2. Set your API key
 
-Source Tracking: Maintains complete metadata (filename, page number, chunk ID) for each retrieved chunk
+Get a free API key from [openrouter.ai](https://openrouter.ai), then add it to `.env`:
 
-Batch Processing: Handles documents in batches of 100 to manage API rate limits
+```env
+OPENAI_API_KEY=sk-or-v1-xxxxxxxxxxxxxxxx
+```
 
-3. Conversational Interface:
+### 3. Add your documents
 
-Chat History: Maintains conversation context (last 4 exchanges)
+Drop your `.txt`, `.pdf`, or `.csv` files into the `documents/` folder.
 
-Source Citation: Displays exact documents and pages used for each answer
+### 4. Index the documents
 
-Session Management: Clear conversation option with one click
-
-Real-time Generation: Streaming-like experience with loading indicators
-
-4. User Experience:
-   
-Sidebar Configuration: API key input with status indicators
-
-Document Status: Visual feedback on indexed documents
-
-Source Visibility: Toggle to show/hide source citations
-
-Bilingual UI: Bangla (Bengali) language support in interface elements
-
-Responsive Design: Works on desktop and tablet devices
-
-🔄 Data Flow:
-
-Ingestion Pipeline (ingestion_pipeline.py)
-Document Discovery: Scan documents/ folder for all supported file types
-
-Document Loading:
-
-PDFs: Loaded with PyPDFLoader, each page as separate document
-
-Text files: Loaded with TextLoader (UTF-8 encoding)
-
-CSV files: Loaded with CSVLoader, each row as document
-
-URLs: Loaded with WebBaseLoader, entire page as document
-
-Text Splitting: Split documents using RecursiveCharacterTextSplitter
-
-Chunk size: 500 characters
-
-Overlap: 50 characters
-
-Separators: ["\n\n", "\n", " ", ""]
-
-Embedding Generation: Create embeddings using Google's embedding-001 model
-
-Vector Storage: Store in ChromaDB with metadata preservation
-
-Persistence: Database saved to ./chroma_db for reuse
-
-Query Processing (chatbot.py)
-Question Submission: User submits question through UI
-
-Semantic Search: Retriever finds top 4 relevant chunks (k=4)
-
-Context Assembly: Retrieved chunks concatenated with separators
-
-History Integration: Last 4 conversation exchanges added to context
-
-Prompt Engineering: Structured prompt with instructions:
-
-"Answer using ONLY this context"
-
-"If not in context, say: I don't have that information"
-
-LLM Invocation: Gemini 1.5 Flash generates answer (temperature=0)
-
-Source Extraction: Metadata extracted from retrieved documents
-
-Response Return: Answer with sources delivered to UI
-
-Web Interface (app.py)
-Initialization: Check API key and vector database availability
-
-Session State: Maintain conversation history in Streamlit session
-
-Message Display: Render chat history with role-based styling
-
-User Input: Chat input field with question submission
-
-Processing: Display loading spinner during LLM invocation
-
-Source Display: Expandable sections showing document sources
-
-Error Handling: Graceful error messages with troubleshooting tips
-
-🎯 Technical Specifications:
-Configuration Parameters
-
-Parameter	Value	Description
-Chunk Size	500 characters	Size of each document chunk
-Chunk Overlap	50 characters	Overlap between consecutive chunks
-Retrieved Chunks (k)	4	Number of chunks retrieved per query
-Gemini Model	gemini-1.5-flash	LLM model for response generation
-Embedding Model	models/embedding-001	Model for generating embeddings
-Temperature	0	Deterministic responses (no randomness)
-Max Retries	6	API retry attempts on failure
-Batch Size	100	Documents per batch during ingestion
-Batch Delay	2 seconds	Delay between batches for rate limiting
-History Length	4 exchanges	Conversation history maintained
-
-Performance :
-
-Metric	Value
-Response Time	2-5 seconds (depending on context size)
-Embedding Dimension	1024
-Max Document Size	Limited by API (typically 2MB per file)
-Database Size	~1-5 MB per 1000 chunks
-Concurrent Users	Single user (can be scaled)
-
-Running the Application:
-# Python 3.8 or higher required
-python --version
-
-# Install dependencies
-pip install streamlit langchain langchain-google-genai langchain-chroma chromadb pypdf python-dotenv
-
-# Set up environment
-echo "GOOGLE_API_KEY=your_api_key_here" > .env
-
-Step-by-Step Execution:
-Add Documents:
-# Place files in documents/ folder
-cp your_document.pdf documents/
-cp your_data.csv documents/
-
-Ingest Data:
+```bash
 python ingestion_pipeline.py
+```
 
-Expected :
-==================================================
-  RAG Chatbot - Ingestion Pipeline (Gemini)
-==================================================
+This reads your documents, splits them into chunks, creates embeddings, and saves them to `chroma_db/`.
 
-[Step 1] Loading documents...
-  [PDF Files]
-  Loading PDF: document.pdf
-    → Loaded 10 pages
+### 5. Run the chatbot
 
-[Step 2] Splitting into chunks...
-  Created 247 chunks
-
-[Step 3] Creating vector store...
-  Saved 100 chunks...
-  Saved 200 chunks...
-  Saved 247 chunks...
-
-==================================================
-  Ingestion complete!
-==================================================
-
-Launch Application:
-===================
+```bash
 streamlit run app.py
+```
 
-Opens browser at http://localhost:8501
+Or if `streamlit` is not in PATH:
 
-Configure API Key
+```bash
+python -m streamlit run app.py
+```
 
-Enter API key in sidebar (if not in .env)
+---
 
-Or verify existing key is loaded
+## How Each File Works
 
-Start Chatting
+### `ingestion_pipeline.py`
+- Loads PDF, TXT, and CSV files from `documents/`
+- Splits them into 500-character chunks (with 50-char overlap)
+- Creates vector embeddings using `text-embedding-3-small` via OpenRouter
+- Saves everything to ChromaDB at `./chroma_db`
 
-Ask questions about your documents
+### `chatbot.py`
+- Loads the ChromaDB vector store
+- Builds a RAG chain: retriever + LLM
+- `build_rag_chain()` — initializes the chain
+- `ask_question(chain, question)` — retrieves top 4 relevant chunks, builds a prompt with conversation history, and returns answer + sources
+- Can also be run standalone in terminal mode: `python chatbot.py`
 
-View sources in expandable sections
+### `app.py`
+- Streamlit web UI
+- Sidebar: API key input, document status, settings
+- Chat interface with message history
+- Shows source documents used for each answer
 
-Clear conversation as needed
+### `main.py`
+- Alternative ingestion script using raw `chromadb` + `openai` clients (no LangChain)
+- Useful for understanding the low-level flow
 
-Performance Features
-Optimizations Implemented
-Batch Processing: Documents processed in batches of 100 to:
+---
 
-Manage API rate limits
+## Configuration
 
-Reduce memory usage
+These values can be changed in `chatbot.py`:
 
-Provide progress feedback
+| Variable | Default | Description |
+|---|---|---|
+| `CHROMA_DB_PATH` | `./chroma_db` | Where the vector DB is stored |
+| `TOP_K_CHUNKS` | `4` | How many document chunks to retrieve per query |
+| `OPENROUTER_MODEL` | `openai/gpt-4o-mini` | LLM model used for answers |
 
-Retry Logic: Built-in retry mechanism with:
+These values can be changed in `ingestion_pipeline.py`:
 
-Max 6 retries for transient failures
+| Variable | Default | Description |
+|---|---|---|
+| `DOCUMENTS_FOLDER` | `./documents` | Where to look for documents |
+| `CHUNK_SIZE` | `500` | Characters per chunk |
+| `CHUNK_OVERLAP` | `50` | Overlap between chunks |
 
-Exponential backoff (implicit in LangChain)
+---
 
-Efficient Storage:
+## Supported Document Types
 
-Persistent vector database eliminates re-indexing
+| Type | Extension | Loader Used |
+|---|---|---|
+| Text files | `.txt` | `TextLoader` |
+| PDF files | `.pdf` | `PyPDFLoader` |
+| CSV files | `.csv` | `CSVLoader` |
+| Web pages | URL | `WebBaseLoader` |
 
-ChromaDB optimizes query performance with HNSW indexing
+---
 
-Session Persistence:
+## Deploying to Streamlit Cloud
 
-Conversation history maintained during session
+1. Push your project to GitHub (without `.env`)
+2. Go to [streamlit.io/cloud](https://streamlit.io/cloud) and connect your repo
+3. In the app settings, add your secret:
+   ```
+   OPENAI_API_KEY = "sk-or-v1-xxxxxxxx"
+   ```
+4. Set main file to `app.py` and deploy
 
-Vector database persists across application restarts
+---
 
-Memory Management:
+## Common Errors
 
-Only relevant chunks loaded per query
+**`streamlit` not recognized**
+```bash
+python -m streamlit run app.py
+```
 
-Chat history limited to last 4 exchanges
+**`OPENAI_API_KEY not set`**
+Make sure `.env` file exists and has the correct key starting with `sk-or-v1-`.
 
+**`Run python ingestion_pipeline.py first`**
+The `chroma_db/` folder doesn't exist yet. Run ingestion before starting the chatbot.
 
-User Interface Highlights
-Design Elements
-Clean, Modern Design: Custom CSS for source box with left border accent
-
-Responsive Layout: Centered content with fixed-width sidebar
-
-Real-time Feedback: Loading spinners during processing
-
-Visual Status Indicators:
-
-✅ Green success messages
-
-❌ Red error alerts
-
-⚠️ Yellow warnings
-
-ℹ️ Blue information
-
-Interactive Components:
-
-Component	Functionality:
-
-Chat Input	Text box with placeholder in Bangla
-Sidebar	Configuration and status panel
-API Key Input	Password field with visual feedback
-Sources Toggle	Show/hide document sources
-Clear Button	Reset conversation history
-Expandable Sources	Collapsible sections for sources
-
-Source Display Format:
-📄 filename.pdf · page 3
-📄 data.csv
-📄 manual.txt · page 12
-
-Security Considerations:
-Implemented Security Features
-API Key Management
-
-Stored in environment variables (not hardcoded)
-
-Password field in UI (input type="password")
-
-Not persisted in session state
-
-Data Privacy
-
-No user data transmitted externally (except Gemini API)
-
-Local vector database storage
-
-Conversation history cleared on session reset
-
-Error Handling
-
-Graceful failures without exposing system details
-
-User-friendly error messages
-
-No stack traces displayed to users
-
-Potential Risks & Mitigations
-
-Risk	Mitigation
-
-API key exposure	Use .env files, never commit to version control
-Large document DoS	Chunk size limits, rate limiting
-Sensitive data	Local deployment only, no cloud storage
-API rate limits	Batch processing with delays, retry logic
-
-Potential Enhancements
-Short-term Improvements
-Document Management
-
-Add ability to add/remove documents without re-indexing
-
-Implement incremental updates
-
-Enhanced Search
-
-Hybrid search (semantic + keyword)
-
-Metadata filtering
-
-Export Capabilities
-
-Export conversations as PDF/JSON
-
-Share conversation links
-
-Advanced UI
-
-Dark mode support
-
-Mobile-responsive improvements
-
-Long-term Enhancements
-Multi-user Support
-
-User authentication
-
-Separate vector spaces per user
-
-Session persistence across logins
-
-Advanced Analytics
-
-Question-answer analytics
-
-Document usage statistics
-
-Response quality metrics
-
-Integration Features
-
-Slack/Discord bot integration
-
-API endpoints for external services
-
-Webhook support
-
-Enhanced LLM Capabilities
-
-Streaming responses
-
-Multiple model support (GPT-4, Claude)
-
-Fine-tuning on domain-specific data
-
-Enterprise Features
-
-Role-based access control
-
-Audit logging
-
-Compliance certifications:
-Use Cases
-Academic Research
-Query research papers stored as PDFs
-
-Extract specific methodologies from papers
-
-Compare findings across multiple documents
-
-Literature review assistance
-
-Legal Document Review
-Extract specific clauses from contracts
-
-Find precedents in case law documents
-
-Analyze compliance requirements
-
-Quick reference to legal terms
-
-Customer Support
-Query knowledge base documents
-
-Provide instant answers to common questions
-
-Troubleshooting guides accessible via chat
-
-Product documentation search
-
-Data Analysis
-Query CSV data in natural language
-
-Extract insights from spreadsheets
-
-Business intelligence queries
-
-Report generation assistance
-
-Technical Documentation:
-
-Get answers from API documentation
-
-Search through code documentation
-
-Troubleshoot with error message lookup
-
-Quick reference to technical specs
-
-System Requirements
-Component	Minimum Requirement
-Python	3.8 or higher
-RAM	4GB (8GB recommended)
-Storage	1GB for vector database
-Internet	Required for Gemini API
-API Key	Valid Google AI Studio API key
-
-🏁 Conclusion
-This RAG Chatbot provides a robust, production-ready solution for document-based question answering. It successfully combines modern AI capabilities with practical usability, offering a scalable foundation for various document-intensive applications. The system is completely free to use (Gemini's free tier) and can be deployed locally or on any cloud platform.
-
-Prepared for Supervisor Review | Project Status: Complete and Functional
+**`chromadb` version conflict**
+```bash
+pip install chromadb --upgrade
+```

@@ -1,7 +1,6 @@
 import os
 import shutil
 import time
-from dotenv import load_dotenv
 
 from langchain_community.document_loaders import (
     PyPDFLoader,
@@ -13,7 +12,20 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 
-load_dotenv()
+# Load secrets from Streamlit Cloud or .env
+try:
+    import streamlit as st
+
+    if hasattr(st, "secrets"):
+        os.environ["OPENAI_API_KEY"] = st.secrets.get("OPENAI_API_KEY", "")
+    else:
+        from dotenv import load_dotenv
+
+        load_dotenv()
+except ImportError:
+    from dotenv import load_dotenv
+
+    load_dotenv()
 
 DOCUMENTS_FOLDER = "./documents"
 CHROMA_DB_PATH = "./chroma_db"

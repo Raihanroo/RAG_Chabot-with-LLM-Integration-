@@ -1,9 +1,15 @@
 import os
 import streamlit as st
-from dotenv import load_dotenv
 from chatbot import build_rag_chain, ask_question
 
-load_dotenv()
+# Load secrets from Streamlit Cloud or .env
+try:
+    key = st.secrets.get("OPENAI_API_KEY", "")
+    if key:
+        os.environ["OPENAI_API_KEY"] = key
+except Exception:
+    from dotenv import load_dotenv
+    load_dotenv()
 
 st.set_page_config(page_title="My RAG Chatbot", page_icon="🧠", layout="centered")
 
