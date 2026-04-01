@@ -77,7 +77,13 @@ def ask_question(chain, question: str):
         messages.append(AIMessage(content=h["a"]))  
   
     # Build prompt  
-    prompt = f"""You are a helpful assistant. Answer using ONLY this context: >> chatbot_new.py && echo. >> chatbot_new.py && echo {context} >> chatbot_new.py && echo. >> chatbot_new.py && echo If the answer is not in the context, say: I don't have that information in the provided documents. >> chatbot_new.py && echo. >> chatbot_new.py && echo Question: {question}"""  
+    prompt = f"""You are a helpful assistant. Answer using ONLY this context:
+
+{context}
+
+If the answer is not in the context, say: I don't have that information in the provided documents.
+
+Question: {question}"""  
   
     messages.append(HumanMessage(content=prompt))  
   
