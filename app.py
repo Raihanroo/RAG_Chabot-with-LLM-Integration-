@@ -1,6 +1,7 @@
 import os
 import streamlit as st
 from chatbot import build_rag_chain, ask_question
+from ingestion_pipeline import main as run_ingestion
 
 # Load secrets from Streamlit Cloud or .env
 try:
@@ -51,10 +52,16 @@ with st.sidebar:
     st.subheader("📦 Document Status")
     if os.path.exists("./chroma_db"):
         st.success("Documents indexed ✅")
+    elif os.getenv("OPENAI_API_KEY", ""):
+        with st.spinner("Documents index হচ্ছে..."):
+            try:
+                run_ingestion()
+                st.success("Documents indexed ✅")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Index failed: {e}")
     else:
         st.error("Not ready ❌")
-        st.warning("আগে এটা run করো:")
-        st.code("python ingestion_pipeline.py")
 
     st.divider()
     show_sources = st.checkbox("Sources দেখাও", value=True)
