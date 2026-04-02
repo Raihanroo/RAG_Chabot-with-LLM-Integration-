@@ -6,11 +6,11 @@ from langchain_community.vectorstores import FAISS
 
 try:
     import streamlit as st
-    if hasattr(st, "secrets"):
+    try:
         key = st.secrets.get("OPENAI_API_KEY", "")
         if key:
             os.environ["OPENAI_API_KEY"] = key
-    else:
+    except Exception:
         from dotenv import load_dotenv
         load_dotenv()
 except ImportError:
