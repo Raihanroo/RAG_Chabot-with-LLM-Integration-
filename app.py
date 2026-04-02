@@ -251,7 +251,7 @@ if "chain" not in st.session_state:
 
 # Chat history
 for msg in st.session_state.messages:
-    avatar = "🧑" if msg["role"] == "user" else "✦"
+    avatar = "🧑" if msg["role"] == "user" else "🤖"
     with st.chat_message(msg["role"], avatar=avatar):
         st.write(msg["content"])
         if msg["role"] == "assistant" and show_sources:
@@ -269,7 +269,7 @@ if user_question := st.chat_input("Message ChatRAG..."):
         st.write(user_question)
     st.session_state.messages.append({"role": "user", "content": user_question})
 
-    with st.chat_message("assistant", avatar="✦"):
+    with st.chat_message("assistant", avatar="🤖"):
         with st.spinner(""):
             try:
                 response = ask_question(st.session_state.chain, user_question)
