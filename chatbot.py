@@ -24,7 +24,7 @@ except ImportError:
 
 # Configuration
 FAISS_DB_PATH = "./faiss_db"
-TOP_K_CHUNKS = 6  # Increased for better coverage
+TOP_K_CHUNKS = 15  # Increased for better Excel data coverage
 OPENROUTER_MODEL = "openai/gpt-4o-mini"
 
 
@@ -34,18 +34,28 @@ def get_embeddings():
     if not api_key:
         raise ValueError("OPENAI_API_KEY not set!")
     
+    # Try OpenRouter first
     try:
-        return OpenAIEmbeddings(
+        embeddings = OpenAIEmbeddings(
             model="text-embedding-3-small",
             base_url="https://openrouter.ai/api/v1",
             api_key=api_key,
         )
+        # Test if it works
+        embeddings.embed_query("test")
+        return embeddings
     except Exception as e:
-        return OpenAIEmbeddings(
-            model="text-embedding-3-small",
-            openai_api_base="https://openrouter.ai/api/v1",
-            openai_api_key=api_key,
-        )
+        print(f"⚠️ OpenRouter embeddings failed: {e}")
+        print("⚠️ Trying direct OpenAI API...")
+        try:
+            # Try direct OpenAI API
+            return OpenAIEmbeddings(
+                model="text-embedding-3-small",
+                api_key=api_key,
+            )
+        except Exception as e2:
+            print(f"❌ Direct OpenAI also failed: {e2}")
+            raise ValueError("API key is invalid or expired. Please update your OPENAI_API_KEY in .env file")
 
 
 def load_vector_store():

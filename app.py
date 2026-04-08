@@ -130,8 +130,8 @@ with st.sidebar:
     # Document Upload Section
     st.markdown("#### 📤 Upload Documents")
     uploaded_files = st.file_uploader(
-        "Choose PDF, TXT, or CSV files",
-        type=['pdf', 'txt', 'csv'],
+        "Choose PDF, TXT, CSV, or Excel files",
+        type=['pdf', 'txt', 'csv', 'xlsx', 'xls'],
         accept_multiple_files=True,
         help="Upload documents to chat with"
     )

@@ -28,8 +28,8 @@ except ImportError:
 # Configuration
 DOCUMENTS_FOLDER = "./documents"
 FAISS_DB_PATH = "./faiss_db"
-CHUNK_SIZE = 500
-CHUNK_OVERLAP = 50
+CHUNK_SIZE = 1000  # Increased for better Excel data handling
+CHUNK_OVERLAP = 100
 
 
 def load_documents():
@@ -84,19 +84,42 @@ def load_documents():
                     # Read Excel file
                     df = pd.read_excel(filepath)
                     
-                    # Convert to text format
-                    text_content = f"File: {filename}\n\n"
-                    text_content += f"Columns: {', '.join(df.columns.tolist())}\n\n"
-                    text_content += "Data:\n"
-                    text_content += df.to_string(index=False)
+                    # Strategy 1: Create summary document
+                    summary_content = f"File: {filename}\n\n"
+                    summary_content += f"Total Rows: {len(df)}\n"
+                    summary_content += f"Columns: {', '.join(df.columns.tolist())}\n\n"
+                    summary_content += "Column Details:\n"
+                    for col in df.columns:
+                        summary_content += f"  - {col}: {df[col].dtype}\n"
                     
-                    # Create document
-                    doc = Document(
-                        page_content=text_content,
-                        metadata={"source": filepath, "type": "excel"}
+                    summary_doc = Document(
+                        page_content=summary_content,
+                        metadata={"source": filepath, "type": "excel_summary"}
                     )
-                    documents.append(doc)
-                    print(f"  ✅ Loaded: {filename} ({len(df)} rows, {len(df.columns)} columns)")
+                    documents.append(summary_doc)
+                    
+                    # Strategy 2: Split into smaller chunks (every 20 rows)
+                    chunk_size = 20
+                    for i in range(0, len(df), chunk_size):
+                        chunk_df = df.iloc[i:i+chunk_size]
+                        
+                        chunk_content = f"File: {filename} (Rows {i+1} to {min(i+chunk_size, len(df))})\n\n"
+                        chunk_content += f"Columns: {', '.join(df.columns.tolist())}\n\n"
+                        chunk_content += "Data:\n"
+                        chunk_content += chunk_df.to_string(index=False)
+                        
+                        chunk_doc = Document(
+                            page_content=chunk_content,
+                            metadata={
+                                "source": filepath, 
+                                "type": "excel_chunk",
+                                "chunk_start": i,
+                                "chunk_end": min(i+chunk_size, len(df))
+                            }
+                        )
+                        documents.append(chunk_doc)
+                    
+                    print(f"  ✅ Loaded: {filename} ({len(df)} rows, {len(df.columns)} columns, {len(range(0, len(df), chunk_size))} chunks)")
                 except Exception as e:
                     print(f"  ❌ Failed to load Excel {filename}: {e}")
             
