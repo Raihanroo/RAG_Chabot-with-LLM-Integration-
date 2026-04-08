@@ -26,6 +26,27 @@ except Exception:
     from dotenv import load_dotenv
     load_dotenv()
 
+# Auto-process documents on startup
+if os.path.exists(DOCUMENTS_FOLDER) and not os.path.exists(FAISS_DB_PATH):
+    try:
+        documents = load_documents()
+        if documents:
+            splitter = RecursiveCharacterTextSplitter(
+                chunk_size=CHUNK_SIZE,
+                chunk_overlap=CHUNK_OVERLAP
+            )
+            chunks = splitter.split_documents(documents)
+            api_key = os.getenv("OPENAI_API_KEY", "")
+            embeddings = OpenAIEmbeddings(
+                model="text-embedding-3-small",
+                base_url="https://openrouter.ai/api/v1",
+                api_key=api_key,
+            )
+            vector_store = FAISS.from_documents(chunks, embeddings)
+            vector_store.save_local(FAISS_DB_PATH)
+    except Exception as e:
+        pass
+
 # Page configuration
 st.set_page_config(
     page_title="ChatRAG - AI Document Assistant", 
