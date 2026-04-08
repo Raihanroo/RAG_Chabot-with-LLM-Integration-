@@ -8,3 +8,10 @@ langchain-text-splitters==0.2.4
 faiss-cpu==1.8.0
 openai
 pypdf
+PyPDF2
+pandas
+openpyxl
+xlrd
+fastapi
+uvicorn[standard]
+python-multipart

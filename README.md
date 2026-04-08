@@ -1,185 +1,235 @@
-# RAG Chatbot — Beginner's Guide
+# ChatRAG - AI Document Assistant ✨
 
-A Retrieval-Augmented Generation (RAG) chatbot that lets you chat with your own documents using OpenRouter AI and ChromaDB.
+A modern, AI-powered chatbot that lets you chat with your documents using RAG (Retrieval-Augmented Generation).
 
----
+🌐 **Live Demo**: [Coming Soon on Streamlit Cloud](https://share.streamlit.io/)
 
-## What is RAG?
-
-RAG (Retrieval-Augmented Generation) is a technique where the AI first **retrieves** relevant chunks from your documents, then **generates** an answer based only on that context — so it doesn't hallucinate or make things up.
-
-```
-Your Question
-     ↓
-ChromaDB (Vector Search) → Finds relevant document chunks
-     ↓
-LLM (GPT-4o-mini via OpenRouter) → Generates answer from those chunks
-     ↓
-Answer + Sources
-```
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.56-red)
+![LangChain](https://img.shields.io/badge/LangChain-0.2.16-green)
 
 ---
 
-## Project Structure
+## 🌟 Features
 
-```
-Rag_for_beginner/
-│
-├── app.py                  # Streamlit web UI (main entry point)
-├── chatbot.py              # RAG chain logic (retriever + LLM)
-├── ingestion_pipeline.py   # Loads & indexes documents into ChromaDB
-├── main.py                 # Alternate ingestion script (raw OpenAI client)
-│
-├── documents/              # Put your PDF, TXT, CSV files here
-│   ├── google_history_deep.txt
-│   ├── microsoft_evolution.txt
-│   └── tesla_gigafactories.txt
-│
-├── chroma_db/              # Auto-generated vector database (don't edit)
-├── .env                    # Your API key goes here
-├── requirements.txt        # Python dependencies
-└── .streamlit/
-    └── secrets.toml.example
-```
+- 📤 **Easy Document Upload** - PDF, TXT, CSV, Excel support
+- 💬 **Smart AI Chat** - Powered by GPT-4o-mini
+- 🌍 **Multilingual** - English & Bangla support
+- 🔍 **Semantic Search** - Understands synonyms & context
+- 🎨 **Modern Dark UI** - Sleek, responsive interface
+- 📎 **Source Citations** - See which documents were used
+- ⚡ **Fast & Accurate** - FAISS vector search
+- 🌐 **Cloud Ready** - Deploy to Streamlit Cloud
 
 ---
 
-## Setup
+## 🚀 Quick Start
 
-### 1. Install dependencies
-
+### 1. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-Or if using a virtual environment:
-
-```bash
-python -m venv venv
-.\venv\Scripts\Activate.ps1   # Windows
-source venv/bin/activate       # Mac/Linux
-
-pip install -r requirements.txt
-```
-
-### 2. Set your API key
-
-Get a free API key from [openrouter.ai](https://openrouter.ai), then add it to `.env`:
-
+### 2. Set API Key
+Create `.env` file:
 ```env
-OPENAI_API_KEY=sk-or-v1-xxxxxxxxxxxxxxxx
+OPENAI_API_KEY=sk-or-v1-your-key-here
 ```
 
-### 3. Add your documents
+Get your API key from [OpenRouter](https://openrouter.ai/)
 
-Drop your `.txt`, `.pdf`, or `.csv` files into the `documents/` folder.
+### 3. Add Documents
+Put your PDF, TXT, or CSV files in the `documents/` folder
 
-### 4. Index the documents
-
+### 4. Process Documents
 ```bash
 python ingestion_pipeline.py
 ```
 
-This reads your documents, splits them into chunks, creates embeddings, and saves them to `chroma_db/`.
-
-### 5. Run the chatbot
-
+### 5. Run the App
 ```bash
 streamlit run app.py
 ```
 
-Or if `streamlit` is not in PATH:
-
+Or use the shortcut:
 ```bash
-python -m streamlit run app.py
+run.bat  # Windows
+```
+
+Browser will open at `http://localhost:8501`
+
+---
+
+## 📁 Project Structure
+
+```
+ChatRAG/
+├── app.py                    # Streamlit web interface
+├── chatbot.py                # RAG logic
+├── ingestion_pipeline.py     # Document processing
+├── api.py                    # FastAPI backend (optional)
+│
+├── documents/                # Your documents here
+├── faiss_db/                 # Vector database (auto-generated)
+│
+├── .env                      # API key (don't commit!)
+├── requirements.txt          # Python dependencies
+│
+├── README.md                 # This file
+├── PROJECT_SUMMARY.md        # Detailed documentation
+└── DEPLOYMENT.md             # Deployment guide
 ```
 
 ---
 
-## How Each File Works
+## 💡 How to Use
 
-### `ingestion_pipeline.py`
-- Loads PDF, TXT, and CSV files from `documents/`
-- Splits them into 500-character chunks (with 50-char overlap)
-- Creates vector embeddings using `text-embedding-3-small` via OpenRouter
-- Saves everything to ChromaDB at `./chroma_db`
+### Upload Documents via UI:
+1. Open the app: `streamlit run app.py`
+2. Click "Choose files" in sidebar
+3. Select your documents
+4. Click "Process Documents"
+5. Wait for processing to complete
+6. Start chatting!
 
-### `chatbot.py`
-- Loads the ChromaDB vector store
-- Builds a RAG chain: retriever + LLM
-- `build_rag_chain()` — initializes the chain
-- `ask_question(chain, question)` — retrieves top 4 relevant chunks, builds a prompt with conversation history, and returns answer + sources
-- Can also be run standalone in terminal mode: `python chatbot.py`
+### Upload Documents via Terminal:
+1. Copy files to `documents/` folder
+2. Run: `python ingestion_pipeline.py`
+3. Start the app: `streamlit run app.py`
 
-### `app.py`
-- Streamlit web UI
-- Sidebar: API key input, document status, settings
-- Chat interface with message history
-- Shows source documents used for each answer
-
-### `main.py`
-- Alternative ingestion script using raw `chromadb` + `openai` clients (no LangChain)
-- Useful for understanding the low-level flow
-
----
-
-## Configuration
-
-These values can be changed in `chatbot.py`:
-
-| Variable | Default | Description |
-|---|---|---|
-| `CHROMA_DB_PATH` | `./chroma_db` | Where the vector DB is stored |
-| `TOP_K_CHUNKS` | `4` | How many document chunks to retrieve per query |
-| `OPENROUTER_MODEL` | `openai/gpt-4o-mini` | LLM model used for answers |
-
-These values can be changed in `ingestion_pipeline.py`:
-
-| Variable | Default | Description |
-|---|---|---|
-| `DOCUMENTS_FOLDER` | `./documents` | Where to look for documents |
-| `CHUNK_SIZE` | `500` | Characters per chunk |
-| `CHUNK_OVERLAP` | `50` | Overlap between chunks |
-
----
-
-## Supported Document Types
-
-| Type | Extension | Loader Used |
-|---|---|---|
-| Text files | `.txt` | `TextLoader` |
-| PDF files | `.pdf` | `PyPDFLoader` |
-| CSV files | `.csv` | `CSVLoader` |
-| Web pages | URL | `WebBaseLoader` |
-
----
-
-## Deploying to Streamlit Cloud
-
-1. Push your project to GitHub (without `.env`)
-2. Go to [streamlit.io/cloud](https://streamlit.io/cloud) and connect your repo
-3. In the app settings, add your secret:
-   ```
-   OPENAI_API_KEY = "sk-or-v1-xxxxxxxx"
-   ```
-4. Set main file to `app.py` and deploy
-
----
-
-## Common Errors
-
-**`streamlit` not recognized**
-```bash
-python -m streamlit run app.py
+### Ask Questions:
+```
+You: "When was Google founded?"
+AI:  "Google was founded on September 4, 1998..."
+     📎 Sources: google_history_deep.txt
 ```
 
-**`OPENAI_API_KEY not set`**
-Make sure `.env` file exists and has the correct key starting with `sk-or-v1-`.
+---
 
-**`Run python ingestion_pipeline.py first`**
-The `chroma_db/` folder doesn't exist yet. Run ingestion before starting the chatbot.
+## 🔧 Configuration
 
-**`chromadb` version conflict**
-```bash
-pip install chromadb --upgrade
+### Environment Variables (.env):
+```env
+OPENAI_API_KEY=sk-or-v1-xxxxxxxxxxxxxxxx
 ```
+
+### Customize Settings (chatbot.py):
+```python
+FAISS_DB_PATH = "./faiss_db"           # Database location
+TOP_K_CHUNKS = 4                        # Chunks to retrieve
+OPENROUTER_MODEL = "openai/gpt-4o-mini" # AI model
+```
+
+### Customize Processing (ingestion_pipeline.py):
+```python
+DOCUMENTS_FOLDER = "./documents"  # Documents location
+CHUNK_SIZE = 500                  # Chunk size
+CHUNK_OVERLAP = 50                # Overlap between chunks
+```
+
+---
+
+## 🌐 Deployment
+
+### Quick Deploy to Streamlit Cloud:
+
+**Option 1: Use deploy script**
+```bash
+deploy.bat  # Windows
+```
+
+**Option 2: Manual**
+```bash
+# Push to GitHub
+git add .
+git commit -m "Deploy ChatRAG"
+git push origin main
+
+# Then deploy on Streamlit Cloud
+# See DEPLOY_INSTRUCTIONS.md for details
+```
+
+### Streamlit Cloud Setup:
+1. Go to [share.streamlit.io](https://share.streamlit.io/)
+2. Click "New app"
+3. Select repository: `Raihanroo/RAG_Chabot-with-LLM-Integration-`
+4. Main file: `app.py`
+5. Add secret: `OPENAI_API_KEY = "your-key"`
+6. Deploy!
+
+📖 **Detailed Guide**: [DEPLOY_INSTRUCTIONS.md](DEPLOY_INSTRUCTIONS.md)
+
+---
+
+## 🐛 Troubleshooting
+
+### "OPENAI_API_KEY not set"
+Create `.env` file with your API key:
+```env
+OPENAI_API_KEY=sk-or-v1-your-key-here
+```
+
+### "FAISS database not found"
+Run document ingestion:
+```bash
+python ingestion_pipeline.py
+```
+
+### "I don't have that information"
+- Make sure documents are uploaded
+- Check if documents are processed
+- Try more specific questions
+
+### PDF not loading
+Install PyPDF2:
+```bash
+pip install PyPDF2
+```
+
+---
+
+## 📚 Documentation
+
+- [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) - Detailed project documentation
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Deployment guide
+- [API_GUIDE.md](API_GUIDE.md) - API documentation (FastAPI)
+
+---
+
+## 🛠️ Tech Stack
+
+- **Python 3.11** - Programming language
+- **Streamlit** - Web framework
+- **LangChain** - RAG framework
+- **FAISS** - Vector database
+- **OpenRouter** - AI API access
+- **GPT-4o-mini** - Language model
+
+---
+
+## 📝 License
+
+MIT License - feel free to use for your projects!
+
+---
+
+## 🙏 Acknowledgments
+
+- OpenRouter for AI API access
+- LangChain for RAG framework
+- Streamlit for web framework
+- FAISS for vector search
+
+---
+
+## 📞 Support
+
+- **GitHub Issues**: [Report bugs](https://github.com/Raihanroo/RAG_Chabot-with-LLM-Integration-/issues)
+- **Documentation**: See PROJECT_SUMMARY.md
+- **Streamlit Docs**: https://docs.streamlit.io/
+
+---
+
+**Made with ❤️ by Raihan**
+
+**Star ⭐ this repo if you find it helpful!**

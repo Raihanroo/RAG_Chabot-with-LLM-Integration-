@@ -1,8 +1,23 @@
+"""
+ChatRAG - Streamlit Web Interface
+Modern AI-powered document Q&A system
+"""
+
 import os
 import streamlit as st
 from chatbot import build_rag_chain, ask_question
-from ingestion_pipeline import main as run_ingestion
+from ingestion_pipeline import (
+    load_documents, 
+    DOCUMENTS_FOLDER, 
+    FAISS_DB_PATH, 
+    CHUNK_SIZE, 
+    CHUNK_OVERLAP
+)
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
 
+# Load API key
 try:
     key = st.secrets.get("OPENAI_API_KEY", "")
     if key:
@@ -11,280 +26,276 @@ except Exception:
     from dotenv import load_dotenv
     load_dotenv()
 
-st.set_page_config(page_title="ChatRAG", page_icon="✦", layout="wide")
+# Page configuration
+st.set_page_config(
+    page_title="ChatRAG - AI Document Assistant", 
+    page_icon="✨", 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
+# Custom CSS - Modern Dark Theme
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
-*, *::before, *::after { box-sizing: border-box; }
+* { font-family: 'Inter', sans-serif; }
 
-html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
-    background: #000000;
-    color: #ececec;
-}
+.stApp { background: #0a0a0a !important; }
 
-.stApp { background: #000000 !important; }
-
-#MainMenu, footer, header, [data-testid="stToolbar"] { display: none !important; visibility: hidden !important; }
-
-/* ── Sidebar ── */
+/* Sidebar */
 [data-testid="stSidebar"] {
-    background: #0d0d0d !important;
-    border-right: 1px solid #1e1e1e !important;
+    background: #111111 !important;
+    border-right: 1px solid #2a2a2a !important;
 }
-[data-testid="stSidebar"] * { color: #ececec !important; }
 
-/* ── Buttons ── */
+/* Buttons */
 .stButton > button {
-    background: transparent !important;
+    background: #1a1a1a !important;
     border: 1px solid #2a2a2a !important;
-    color: #ececec !important;
+    color: #e8e8e8 !important;
     border-radius: 8px !important;
-    font-size: 0.875rem !important;
-    font-weight: 500 !important;
-    padding: 9px 14px !important;
-    width: 100% !important;
-    text-align: left !important;
-    transition: background 0.15s !important;
+    transition: all 0.2s !important;
 }
-.stButton > button:hover { background: #1a1a1a !important; }
+.stButton > button:hover {
+    background: #2a2a2a !important;
+}
 
-/* ── Chat messages ── */
+/* File Uploader */
+[data-testid="stFileUploader"] {
+    background: #1a1a1a !important;
+    border: 1px dashed #2a2a2a !important;
+    border-radius: 8px !important;
+}
+
+/* Chat Messages */
 [data-testid="stChatMessage"] {
     background: transparent !important;
-    border: none !important;
-    border-radius: 0 !important;
-    padding: 24px 0 !important;
-    max-width: 680px;
-    margin: 0 auto !important;
+    padding: 20px 0 !important;
 }
 
-/* ── User avatar: circle with person icon ── */
-[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {
-    background: transparent !important;
-}
 [data-testid="stChatMessageAvatarUser"] {
-    background: #19c37d !important;
-    border-radius: 4px !important;
-    width: 30px !important;
-    height: 30px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 0.85rem !important;
-    font-weight: 700 !important;
-    color: #000 !important;
-}
-[data-testid="stChatMessageAvatarAssistant"] {
-    background: #000 !important;
-    border: 1px solid #333 !important;
-    border-radius: 4px !important;
-    width: 30px !important;
-    height: 30px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border-radius: 50% !important;
 }
 
-/* ── Chat input ── */
+[data-testid="stChatMessageAvatarAssistant"] {
+    background: #1a1a1a !important;
+    border: 1px solid #2a2a2a !important;
+    border-radius: 50% !important;
+}
+
+/* Chat Input */
 [data-testid="stChatInput"] textarea {
-    background: #0d0d0d !important;
+    background: #1a1a1a !important;
     border: 1px solid #2a2a2a !important;
     border-radius: 12px !important;
-    color: #ececec !important;
-    font-size: 1rem !important;
-    padding: 14px 52px 14px 18px !important;
-    resize: none !important;
-    box-shadow: 0 0 0 1px #2a2a2a !important;
-}
-[data-testid="stChatInput"] textarea:focus {
-    border-color: #444 !important;
-    box-shadow: 0 0 0 1px #444 !important;
-}
-[data-testid="stChatInputContainer"] {
-    background: #000 !important;
-    border-top: 1px solid #1e1e1e !important;
-    padding: 12px 0 16px !important;
-    max-width: 680px;
-    margin: 0 auto !important;
+    color: #e8e8e8 !important;
 }
 
-/* ── Status boxes ── */
+/* Success/Error */
 .stSuccess {
     background: #0a1a14 !important;
     border: 1px solid #1a3a28 !important;
-    border-radius: 8px !important;
-    color: #19c37d !important;
+    color: #00ff88 !important;
 }
 .stError {
     background: #1a0a0a !important;
     border: 1px solid #3a1a1a !important;
-    border-radius: 8px !important;
-}
-.stInfo {
-    background: #0a0a1a !important;
-    border: 1px solid #1a1a3a !important;
-    border-radius: 8px !important;
 }
 
-/* ── Source box ── */
-.source-box {
-    background: #111;
-    border: 1px solid #222;
-    border-radius: 8px;
-    padding: 8px 12px;
-    margin: 4px 0;
-    font-size: 0.8rem;
-    color: #888;
-}
-
-/* ── Expander ── */
-[data-testid="stExpander"] {
-    background: #0d0d0d !important;
-    border: 1px solid #222 !important;
-    border-radius: 10px !important;
-}
-[data-testid="stExpander"] summary { color: #888 !important; font-size: 0.82rem !important; }
-
-/* ── Toggle ── */
-[data-testid="stToggle"] label { color: #888 !important; font-size: 0.82rem !important; }
-
-/* ── Input ── */
-input[type="password"] {
-    background: #0d0d0d !important;
-    border: 1px solid #2a2a2a !important;
-    border-radius: 8px !important;
-    color: #ececec !important;
-}
-label { color: #888 !important; font-size: 0.8rem !important; }
-
-hr { border-color: #1e1e1e !important; }
-
-/* ── Spinner ── */
-.stSpinner > div { border-top-color: #19c37d !important; }
-
-/* ── Scrollbar ── */
+/* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
 ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Sidebar ──────────────────────────────────────────────
-with st.sidebar:
-    st.markdown("<div style='padding:12px 0 4px;font-size:1rem;font-weight:600;color:#ececec'>✦ ChatRAG</div>", unsafe_allow_html=True)
-    st.divider()
+# ═══════════════════════════════════════════════════════════
+# SIDEBAR
+# ═══════════════════════════════════════════════════════════
 
-    if st.button("＋  New chat", use_container_width=True):
+with st.sidebar:
+    st.markdown("### ✨ ChatRAG")
+    st.markdown("AI-powered document assistant")
+    
+    # New Chat Button
+    if st.button("➕ New Chat", use_container_width=True):
         st.session_state.messages = []
         st.session_state.chain = None
         st.rerun()
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<span style='font-size:0.7rem;color:#444;text-transform:uppercase;letter-spacing:0.08em'>Settings</span>", unsafe_allow_html=True)
-    st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
-
-    existing_key = os.getenv("OPENAI_API_KEY", "")
-    if existing_key:
-        st.markdown("<div style='font-size:0.82rem;color:#19c37d;padding:6px 0'>● API key connected</div>", unsafe_allow_html=True)
-    else:
-        typed_key = st.text_input("OpenRouter API key", type="password", placeholder="sk-or-v1-...")
-        if typed_key:
-            os.environ["OPENAI_API_KEY"] = typed_key
-            st.rerun()
-
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-    show_sources = st.toggle("Show sources", value=True)
-
+    
     st.divider()
-    st.markdown("<span style='font-size:0.7rem;color:#444;text-transform:uppercase;letter-spacing:0.08em'>Knowledge Base</span>", unsafe_allow_html=True)
-    st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+    
+    # Document Upload Section
+    st.markdown("#### 📤 Upload Documents")
+    uploaded_files = st.file_uploader(
+        "Choose PDF, TXT, or CSV files",
+        type=['pdf', 'txt', 'csv'],
+        accept_multiple_files=True,
+        help="Upload documents to chat with"
+    )
+    
+    if uploaded_files:
+        if st.button("🔄 Process Documents", use_container_width=True):
+            with st.spinner("Processing documents..."):
+                try:
+                    # Save uploaded files
+                    os.makedirs(DOCUMENTS_FOLDER, exist_ok=True)
+                    for uploaded_file in uploaded_files:
+                        file_path = os.path.join(DOCUMENTS_FOLDER, uploaded_file.name)
+                        with open(file_path, "wb") as f:
+                            f.write(uploaded_file.getbuffer())
+                    
+                    # Process documents
+                    documents = load_documents()
+                    if documents:
+                        splitter = RecursiveCharacterTextSplitter(
+                            chunk_size=CHUNK_SIZE,
+                            chunk_overlap=CHUNK_OVERLAP
+                        )
+                        chunks = splitter.split_documents(documents)
+                        
+                        api_key = os.getenv("OPENAI_API_KEY", "")
+                        embeddings = OpenAIEmbeddings(
+                            model="text-embedding-3-small",
+                            base_url="https://openrouter.ai/api/v1",
+                            api_key=api_key,
+                        )
+                        
+                        vector_store = FAISS.from_documents(chunks, embeddings)
+                        vector_store.save_local(FAISS_DB_PATH)
+                        
+                        st.session_state.chain = None
+                        st.success(f"✅ Processed {len(chunks)} chunks from {len(documents)} documents!")
+                        st.rerun()
+                    else:
+                        st.error("No documents found")
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+    
+    st.divider()
+    
+    # Documents List
+    st.markdown("#### 📚 Documents")
+    if os.path.exists(DOCUMENTS_FOLDER):
+        docs = [f for f in os.listdir(DOCUMENTS_FOLDER) 
+                if os.path.isfile(os.path.join(DOCUMENTS_FOLDER, f))]
+        if docs:
+            for doc in docs[:10]:
+                icon = "📄" if doc.endswith('.pdf') else "📊" if doc.endswith('.csv') else "📝"
+                st.text(f"{icon} {doc}")
+        else:
+            st.info("No documents yet")
+    
+    st.divider()
+    
+    # Info
+    st.markdown("#### ℹ️ About")
+    st.markdown("""
+    ChatRAG uses AI to answer questions about your documents.
+    
+    **How to use:**
+    1. Upload documents
+    2. Click "Process Documents"
+    3. Ask questions!
+    """)
 
-    if os.path.exists("./faiss_db"):
-        st.markdown("<div style='font-size:0.82rem;color:#19c37d;padding:6px 0'>● Documents indexed</div>", unsafe_allow_html=True)
-    elif os.getenv("OPENAI_API_KEY", ""):
-        with st.spinner("Indexing..."):
-            try:
-                run_ingestion()
-                st.rerun()
-            except Exception as e:
-                st.error(f"Failed: {e}")
-    else:
-        st.markdown("<div style='font-size:0.82rem;color:#555;padding:6px 0'>Add API key to index</div>", unsafe_allow_html=True)
+# ═══════════════════════════════════════════════════════════
+# MAIN CONTENT
+# ═══════════════════════════════════════════════════════════
 
-    st.markdown("<br><br><br>", unsafe_allow_html=True)
-    st.markdown("<span style='font-size:0.7rem;color:#333'>ChatRAG · LangChain + FAISS</span>", unsafe_allow_html=True)
-
-# ── Main ──────────────────────────────────────────────────
+# Check prerequisites
 api_key = os.getenv("OPENAI_API_KEY", "")
-db_ready = os.path.exists("./faiss_db")
+db_ready = os.path.exists(FAISS_DB_PATH)
 
+# Initialize session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Empty state — ChatGPT style center prompt
+# Empty state
 if not st.session_state.messages:
     st.markdown("""
-    <div style='display:flex;flex-direction:column;align-items:center;justify-content:center;
-                height:65vh;gap:16px;text-align:center;'>
-        <div style='width:52px;height:52px;background:#000;border:1px solid #333;border-radius:12px;
-                    display:flex;align-items:center;justify-content:center;font-size:1.6rem;'>✦</div>
-        <div style='font-size:1.75rem;font-weight:600;color:#ececec;'>How can I help you?</div>
-        <div style='font-size:0.9rem;color:#555;max-width:380px;line-height:1.6;'>
-            Ask anything about your uploaded documents.<br>I'll find the answer for you.
+    <div style='text-align:center;padding:100px 20px;'>
+        <div style='font-size:64px;margin-bottom:20px;'>✨</div>
+        <div style='font-size:32px;font-weight:600;margin-bottom:12px;color:#e8e8e8;'>
+            How can I help you?
+        </div>
+        <div style='font-size:16px;color:#888;max-width:500px;margin:0 auto;'>
+            Ask anything about your uploaded documents.<br>
+            I'll find the answer for you.
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-if not api_key or not db_ready:
+# Check API key
+if not api_key:
+    st.warning("⚠️ Please set your OPENAI_API_KEY in .env file")
+    st.code("OPENAI_API_KEY=sk-or-v1-your-key-here", language="bash")
     st.stop()
 
-if "chain" not in st.session_state:
-    with st.spinner(""):
+# Check database
+if not db_ready:
+    st.info("📤 Upload documents using the sidebar to get started")
+    st.stop()
+
+# Initialize RAG chain
+if "chain" not in st.session_state or st.session_state.chain is None:
+    with st.spinner("Loading AI model..."):
         try:
             st.session_state.chain = build_rag_chain()
         except Exception as e:
             st.error(f"Failed to load model: {e}")
             st.stop()
 
-# Chat history
+# Display chat history
 for msg in st.session_state.messages:
     avatar = "🧑" if msg["role"] == "user" else "🤖"
     with st.chat_message(msg["role"], avatar=avatar):
         st.write(msg["content"])
-        if msg["role"] == "assistant" and show_sources:
+        
+        # Show sources for assistant messages
+        if msg["role"] == "assistant":
             sources = msg.get("sources", [])
             if sources:
                 with st.expander(f"📎 {len(sources)} source(s)"):
                     for src in sources:
                         fname = os.path.basename(src["file"])
-                        pg = f" · p.{src['page']}" if src.get("page") is not None else ""
-                        st.markdown(f'<div class="source-box">📄 {fname}{pg}</div>', unsafe_allow_html=True)
+                        pg = f" · Page {src['page']}" if src.get("page") else ""
+                        st.markdown(f"📄 **{fname}**{pg}")
 
-# Input
+# Chat input
 if user_question := st.chat_input("Message ChatRAG..."):
+    # Add user message
     with st.chat_message("user", avatar="🧑"):
         st.write(user_question)
     st.session_state.messages.append({"role": "user", "content": user_question})
 
+    # Get AI response
     with st.chat_message("assistant", avatar="🤖"):
-        with st.spinner(""):
+        with st.spinner("Thinking..."):
             try:
                 response = ask_question(st.session_state.chain, user_question)
-                answer   = response["answer"]
-                sources  = response["sources"]
+                answer = response["answer"]
+                sources = response["sources"]
+                
                 st.write(answer)
-                if show_sources and sources:
+                
+                if sources:
                     with st.expander(f"📎 {len(sources)} source(s)"):
                         for src in sources:
                             fname = os.path.basename(src["file"])
-                            pg = f" · p.{src['page']}" if src.get("page") is not None else ""
-                            st.markdown(f'<div class="source-box">📄 {fname}{pg}</div>', unsafe_allow_html=True)
+                            pg = f" · Page {src['page']}" if src.get("page") else ""
+                            st.markdown(f"📄 **{fname}**{pg}")
+                            
             except Exception as e:
-                answer  = f"Something went wrong: {str(e)}"
+                answer = f"Error: {str(e)}"
                 sources = []
                 st.error(answer)
 
-    st.session_state.messages.append({"role": "assistant", "content": answer, "sources": sources})
+    # Save assistant message
+    st.session_state.messages.append({
+        "role": "assistant", 
+        "content": answer, 
+        "sources": sources
+    })
