@@ -2,8 +2,8 @@
 
 A powerful AI chatbot that reads your documents (PDF, TXT, CSV, Excel) and answers questions in both English and Bengali.
 
-🌐 **Live Demo**: [ChatRAG on Streamlit Cloud](https://share.streamlit.io/)  
-📦 **GitHub**: [Raihanroo/RAG_Chabot-with-LLM-Integration-](https://github.com/Raihanroo/RAG_Chabot-with-LLM-Integration-)
+📦 **GitHub**: [Raihanroo/RAG_Chabot-with-LLM-Integration-](https://github.com/Raihanroo/RAG_Chabot-with-LLM-Integration-)  
+🌐 **Deploy**: Ready for [Streamlit Cloud](https://share.streamlit.io/)
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.56-red)
@@ -169,32 +169,35 @@ chmod +x deploy.sh
 ./deploy.sh
 ```
 
-#### Manual:
-```bash
-# Push to GitHub
-git add .
-git commit -m "Deploy ChatRAG"
-git push origin main
+#### Manual Deployment:
 
-# Then go to: https://share.streamlit.io/
-# Click "New app"
-# Select your repo and deploy!
-```
+1. **Push to GitHub** (already done ✅)
 
-### ⚙️ Streamlit Cloud Setup:
-1. Go to [share.streamlit.io](https://share.streamlit.io/)
-2. Sign in with GitHub
-3. Click "New app"
-4. Repository: `Raihanroo/RAG_Chabot-with-LLM-Integration-`
-5. Branch: `main`
-6. Main file: `app.py`
-7. **Secrets** (Important!):
+2. **Go to Streamlit Cloud:**
+   ```
+   https://share.streamlit.io/
+   ```
+
+3. **Sign in with GitHub**
+
+4. **Click "New app"**
+
+5. **Configure:**
+   - Repository: `Raihanroo/RAG_Chabot-with-LLM-Integration-`
+   - Branch: `main`
+   - Main file: `app.py`
+
+6. **Add Secrets (IMPORTANT!):**
+   - Click "Advanced settings"
+   - Go to "Secrets" section
+   - Add:
    ```toml
    OPENAI_API_KEY = "sk-or-v1-your-actual-key"
    ```
-8. Click "Deploy!"
 
-📖 **Detailed Guide**: [DEPLOY_INSTRUCTIONS.md](DEPLOY_INSTRUCTIONS.md)
+7. **Click "Deploy!"**
+
+Wait 2-3 minutes and your app will be live! 🎉
 
 ---
 
@@ -303,10 +306,7 @@ pip install pandas openpyxl xlrd
 | File | Description |
 |------|-------------|
 | [COMPLETE_SUMMARY.md](COMPLETE_SUMMARY.md) | Complete guide in Bengali - Everything in one place |
-| [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) | Detailed technical documentation |
-| [DEPLOY_INSTRUCTIONS.md](DEPLOY_INSTRUCTIONS.md) | Step-by-step deployment guide |
-| [HOW_TO_USE.txt](HOW_TO_USE.txt) | Quick reference guide |
-| [API_GUIDE.md](API_GUIDE.md) | FastAPI documentation |
+| [README.md](README.md) | This file - Quick overview in English |
 
 ---
 
@@ -386,15 +386,13 @@ MIT License - Free to use for personal and commercial projects
 ## 📞 Support
 
 - **GitHub Issues**: [Report bugs](https://github.com/Raihanroo/RAG_Chabot-with-LLM-Integration-/issues)
-- **Documentation**: See [COMPLETE_SUMMARY.md](COMPLETE_SUMMARY.md)
+📚 **Documentation**: [COMPLETE_SUMMARY.md](COMPLETE_SUMMARY.md) (Bengali) | [README.md](README.md) (English)
 - **Streamlit Community**: [discuss.streamlit.io](https://discuss.streamlit.io/)
 
 ---
 
 ## 🎓 Learn More
 
-- **What is RAG?**: [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md#-learning-resources)
-- **Vector Database**: [COMPLETE_SUMMARY.md](COMPLETE_SUMMARY.md)
 - **LangChain Docs**: [python.langchain.com](https://python.langchain.com/)
 - **Streamlit Docs**: [docs.streamlit.io](https://docs.streamlit.io/)
 

@@ -1589,10 +1589,8 @@ ls -la documents/            # Check documents
 ### Resources:
 
 📚 **Documentation:**
-- README.md - Quick overview
-- COMPLETE_SUMMARY.md - This file
-- PROJECT_SUMMARY.md - Technical details
-- DEPLOY_INSTRUCTIONS.md - Deployment guide
+- README.md - Quick overview (English)
+- COMPLETE_SUMMARY.md - Complete guide (Bengali)
 
 🔗 **Links:**
 - GitHub: https://github.com/Raihanroo/RAG_Chabot-with-LLM-Integration-
